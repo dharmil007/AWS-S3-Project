@@ -15,6 +15,7 @@ import os
 from botocore.exceptions import ClientError
 from datetime import date
 import sys
+import json
 
 class awsUpload ():
     """ This class is used to upload files to s3 """
@@ -102,7 +103,7 @@ class awsUpload ():
                 print ("Number of files not uploaded: ", len(self.listUploadFiles)-len(self.uploadedFiles))
                 print ("Files that were not uploaded",set(self.listUploadFiles)-set(self.uploadedFiles))
 
-    def jSondata (self):
+    def jSondata (self, uploadedFiles):
         """ 1. Store data in jSON
             2. Store jSON data in SQl
             3. Fetch Data from SQl & Generate the hTMl Report.
@@ -111,6 +112,12 @@ class awsUpload ():
                 b. Machine
                 c. No. of Files & FIles
                 d. Success or Failure.
+        """
+
+        jSondataStore = """
+                        
+
+
         """
 
     def createStatusHTML (self, uploadedFiles):
@@ -144,6 +151,7 @@ uploadStart.s3List()
 uploadedFiles = uploadStart.s3Upload()
 uploadStart.uploadFileStatuses()
 uploadStart.createStatusHTML(uploadedFiles)
+uploadStart.jSondata(uploadedFiles)
 
 
 
