@@ -16,6 +16,7 @@ from botocore.exceptions import ClientError
 from datetime import date
 import sys
 import json
+import mysql.connector
 
 class awsUpload ():
     """ This class is used to upload files to s3 """
@@ -119,6 +120,23 @@ class awsUpload ():
 
 
         """
+
+    def mySqlConnection (self):
+        """ Creates connection to SQL Database and creates & inserts necessary data """
+        try:
+            myDB = mysql.connector.connect(
+                host = "uspl-db01.cdqeogcqmqye.us-east-1.rds.amazonaws.com",
+                user = "uspl_backup",
+                passwd = "*d!X5b*@z8",
+                database = "backup_status",
+            )
+        except Exception as sql1:
+            print ("Can't connect to the database"+sql1)
+
+        try:
+            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info "
+        
+
 
     def createStatusHTML (self, uploadedFiles):
         """ Creating a temporary file, which will later be merged 
