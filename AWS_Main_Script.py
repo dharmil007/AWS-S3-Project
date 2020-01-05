@@ -42,7 +42,6 @@ class awsUpload ():
         except Exception as e:
             print ("Can'T read the Directory", e)
             self.uploadStatus = ("Failed", e)
-        finally:
             self.mySqlConnection()
             quit()
 
@@ -62,7 +61,6 @@ class awsUpload ():
             s3_Bucket_valuesList = [files.key.split("/") for files in bucket.objects.filter (Prefix=self.bucketFolderName)]
         except Exception as s:
             print ("Cannot fetch the specified Bucket", s)
-        finally:
             self.mySqlConnection()
             quit()
 
@@ -89,7 +87,6 @@ class awsUpload ():
                     s3.upload_file (localFilesPath,self.bucketName,self.bucketFolderName+files)
                 except Exception as u:
                     print ("Cannot upload the Files", u)
-                finally:
                     self.mySqlConnection()
                     quit()
 
