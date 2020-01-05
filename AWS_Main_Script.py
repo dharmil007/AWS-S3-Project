@@ -33,6 +33,7 @@ class awsUpload ():
         self.uploadedFiles = []
         self.listUploadFiles = []
         self.uploadStatus = ""
+        #self.jSonUploadedFiles = ""
     
     def readLocalFolder(self):
         """ Creating a list of files from the folder """
@@ -41,8 +42,8 @@ class awsUpload ():
             print ("Read from LocalFolder")
         except Exception as e:
             print ("Can'T read the Directory", e)
-            self.uploadStatus = ("Failed", e)
-            self.mySqlConnection()
+            self.uploadStatus = ("Failed", str(e))
+            self.jSondata()
             quit()
 
     def s3List(self):
@@ -61,7 +62,7 @@ class awsUpload ():
             s3_Bucket_valuesList = [files.key.split("/") for files in bucket.objects.filter (Prefix=self.bucketFolderName)]
         except Exception as s:
             print ("Cannot fetch the specified Bucket", s)
-            self.mySqlConnection()
+            self.jSondata()
             quit()
 
         for f in s3_Bucket_valuesList:
@@ -87,7 +88,7 @@ class awsUpload ():
                     s3.upload_file (localFilesPath,self.bucketName,self.bucketFolderName+files)
                 except Exception as u:
                     print ("Cannot upload the Files", u)
-                    self.mySqlConnection()
+                    self.jSondata()
                     quit()
 
         return self.uploadedFiles #This Returns the files that are successfully uploaded to s3.
@@ -117,8 +118,8 @@ class awsUpload ():
             else:
                 self.uploadStatus = "Success"
 
-    """def jSondata (self, uploadedFiles):
-         1. Store data in jSON
+    def jSondata (self):
+        """ 1. Store data in jSON
             2. Store jSON data in SQl
             3. Fetch Data from SQl & Generate the hTMl Report.
             4. Data Types: 
@@ -126,13 +127,12 @@ class awsUpload ():
                 b. Machine
                 c. No. of Files & FIles
                 d. Success or Failure.
+        """
         
 
-        jSondataStore = 
-                        
-
-
-    """
+        self.jSonUploadedFiles = json.dumps (self.uploadedFiles)
+        self.jSonUploadStatus = json.dumps(self.uploadStatus)
+        self.mySqlConnection()
 
     def mySqlConnection (self):
         """ Creates connection to SQL Database and creates & inserts necessary data """
@@ -140,6 +140,7 @@ class awsUpload ():
         try:
             myDB = mysql.connector.connect(
                 host = "uspl-db01.cdqeogcqmqye.us-east-1.rds.amazonaws.com",
+                port = "3377",
                 user = "uspl_backup",
                 passwd = "*d!X5b*@z8",
                 database = "backup_status"
@@ -150,19 +151,20 @@ class awsUpload ():
             quit()
 
         try:
-            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info (ID INT AUTO-INCREMENT PRIMARY KEY, DATE DATE, MACHINE VARCHAR(2555), nooffiles INT, FILES VARCHAR(2555), RESULT VARCHAR(2555))"
+            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info (ID INT AUTO_INCREMENT PRIMARY KEY, DATE DATE, MACHINE VARCHAR(2555), nooffiles INT, FILES VARCHAR(2555), RESULT VARCHAR(2555))"
             mycursor.execute (sqlCreate)
         except Exception as sql2:
-            print ("cant create a database"+sql2)
+            print ("cant create a database",sql2)
             quit()
 
         try:
-            sqlInsert = "Insert into backup_info(DATE, MACHINE, noofflies, files, result) VALUES (%s, %s, %s, %s, %s)"
-            insertVals = (str(dates), self.htmlFileName, len(self.uploadedFiles), self.uploadedFiles, self.uploadStatus)
+            sqlInsert = "Insert into backup_info(DATE, MACHINE, nooffiles, files, result) VALUES (%s, %s, %s, %s, %s)"
+            insertVals = (str(dates), self.htmlFileName, len(self.uploadedFiles), self.jSonUploadedFiles, self.jSonUploadStatus)
+            #print (type(str(dates)), type(self.htmlFileName), type(len(self.uploadedFiles)), type(self.jSonUploadedFiles), type(self.uploadStatus))
             mycursor.execute(sqlInsert, insertVals)
             myDB.commit()
         except Exception as sql3:
-            print ("Cannot Insert into Database"+sql3)
+            print ("Cannot Insert into Database",sql3)
             quit()
         finally:
             mycursor.close()
@@ -193,16 +195,16 @@ class awsUpload ():
                 f_Handle.write("</tr>")
     """
 
-#uploadStart = awsUpload("Z:\\DC-01 CopyJob AWS","uspl-server-backups","DC-01 CopyJob AWS/")
-uploadStart = awsUpload(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+uploadStart = awsUpload("Z:\\TestFolder", "uspl-server-backups" ,"TestFolder/" ,"TestFolder")
+#uploadStart = awsUpload(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 
 uploadStart.readLocalFolder()
 uploadStart.s3List()
 uploadedFiles = uploadStart.s3Upload()
 uploadStart.uploadFileStatuses()
 #uploadStart.createStatusHTML(uploadedFiles)
-#uploadStart.jSondata(uploadedFiles)
-uploadStart.mySqlConnection ()
+uploadStart.jSondata()
+#uploadStart.mySqlConnection ()
 
 
 
