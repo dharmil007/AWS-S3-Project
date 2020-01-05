@@ -81,7 +81,7 @@ class awsUpload ():
                     print ("Cannot upload the Files", u)
                     quit()
 
-        return self.uploadedFiles #Returning uploaded files to be used in Creation of HTML Files.
+        return self.uploadedFiles #This Returns the files that are successfully uploaded to s3.
     
     def uploadFileStatuses (self):
         """ This method calculates the files and number of Files to be Uploaded.
@@ -104,8 +104,8 @@ class awsUpload ():
                 print ("Number of files not uploaded: ", len(self.listUploadFiles)-len(self.uploadedFiles))
                 print ("Files that were not uploaded",set(self.listUploadFiles)-set(self.uploadedFiles))
 
-    def jSondata (self, uploadedFiles):
-        """ 1. Store data in jSON
+    """def jSondata (self, uploadedFiles):
+         1. Store data in jSON
             2. Store jSON data in SQl
             3. Fetch Data from SQl & Generate the hTMl Report.
             4. Data Types: 
@@ -113,16 +113,17 @@ class awsUpload ():
                 b. Machine
                 c. No. of Files & FIles
                 d. Success or Failure.
-        """
+        
 
-        jSondataStore = """
+        jSondataStore = 
                         
 
 
-        """
+    """
 
     def mySqlConnection (self):
         """ Creates connection to SQL Database and creates & inserts necessary data """
+        dates = date.today()
         try:
             myDB = mysql.connector.connect(
                 host = "uspl-db01.cdqeogcqmqye.us-east-1.rds.amazonaws.com",
@@ -130,18 +131,32 @@ class awsUpload ():
                 passwd = "*d!X5b*@z8",
                 database = "backup_status",
             )
+            mycursor = myDB.cursor()
         except Exception as sql1:
             print ("Can't connect to the database"+sql1)
 
         try:
-            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info "
-        
+            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info (ID VARCHAR AUTO-INCREMENT PRIMARY KEY, DATE DATE, MACHINE VARCHAR, nooffiles INT, FILES VARCHAR, RESULT VARCHAR )"
+            mycursor.execute (sqlCreate)
+        except Exception as sql2:
+            print ("cant create a database"+sql2)
+
+        try:
+            sqlInsert = "Insert into backup_info(, DATE, MACHINE, noofflies, files, result) VALUES (%s, %s, %s, %s, %s)"
+            insertVals = (dates, self.htmlFileName, )
+            mycursor.execute(sqlInsert, insertVals)
+            myDB.commit()
+        except Exception as sql3:
+            print ("Cannot Insert into Database"+sql3)
+        finally:
+            mycursor.close()
+            myDB.close()
 
 
+    """
     def createStatusHTML (self, uploadedFiles):
-        """ Creating a temporary file, which will later be merged 
-            List of Files which were Uploaded successfully.
-        """
+            #Creating a temporary file, which will later be merged 
+            #List of Files which were Uploaded successfully.
         dates = date.today()
         #print (uploadedFiles)
         with open(self.htmlFileName+str(dates)+".htm", "w") as f_Handle: #Createing and Opening the file in Write mode
@@ -160,6 +175,7 @@ class awsUpload ():
                     f_Handle.write("</td>")
                     #f_Handle.write("</tr>")
                 f_Handle.write("</tr>")
+    """
 
 #uploadStart = awsUpload("Z:\\DC-01 CopyJob AWS","uspl-server-backups","DC-01 CopyJob AWS/")
 uploadStart = awsUpload(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
@@ -168,8 +184,9 @@ uploadStart.readLocalFolder()
 uploadStart.s3List()
 uploadedFiles = uploadStart.s3Upload()
 uploadStart.uploadFileStatuses()
-uploadStart.createStatusHTML(uploadedFiles)
-uploadStart.jSondata(uploadedFiles)
+#uploadStart.createStatusHTML(uploadedFiles)
+#uploadStart.jSondata(uploadedFiles)
+uploadStart.mySqlConnection ()
 
 
 
