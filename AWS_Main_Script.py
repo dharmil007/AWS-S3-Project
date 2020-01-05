@@ -1,12 +1,15 @@
 """
 Script to upload files to AWS S3 using classes
     2 classes and 4 methods.
+
+    Input - (Local Folder Path Name, S3 Bucket Name, S3 Bucket Folder Name, hTMl File Name (Depreciated. Needs to b Removed))
 1. Upload Script (Class)
-    1.1 Read from Local Folder (Method)
-    1.2 Get files from specific bucket in S3 (Method)
+    1.1 List files from Local Folder (Method)
+    1.2 List files from S3 Bucket (Method)
     1.3 Compare & upload the files to S3 (Method)
     1.4 Get status for uplodEd Files
-    1.5 Create a temp HTML File
+    1.5 Store data in jSon Format (pending - Future)
+    1.6 Store data in SQL
 
 """
 
@@ -29,6 +32,7 @@ class awsUpload ():
         self.s3_Bucket_filesList = []
         self.uploadedFiles = []
         self.listUploadFiles = []
+        self.uploadStatus = ""
     
     def readLocalFolder(self):
         """ Creating a list of files from the folder """
@@ -37,6 +41,9 @@ class awsUpload ():
             print ("Read from LocalFolder")
         except Exception as e:
             print ("Can'T read the Directory", e)
+            self.uploadStatus = ("Failed", e)
+        finally:
+            self.mySqlConnection()
             quit()
 
     def s3List(self):
@@ -55,7 +62,10 @@ class awsUpload ():
             s3_Bucket_valuesList = [files.key.split("/") for files in bucket.objects.filter (Prefix=self.bucketFolderName)]
         except Exception as s:
             print ("Cannot fetch the specified Bucket", s)
+        finally:
+            self.mySqlConnection()
             quit()
+
         for f in s3_Bucket_valuesList:
             self.s3_Bucket_filesList.append(f[1])
         print ("Fetched list form s3")
@@ -79,6 +89,8 @@ class awsUpload ():
                     s3.upload_file (localFilesPath,self.bucketName,self.bucketFolderName+files)
                 except Exception as u:
                     print ("Cannot upload the Files", u)
+                finally:
+                    self.mySqlConnection()
                     quit()
 
         return self.uploadedFiles #This Returns the files that are successfully uploaded to s3.
@@ -90,6 +102,7 @@ class awsUpload ():
         self.listUploadFiles = set(self.localFile) - set(self.s3_Bucket_filesList) #Creates a new List with difference in files in local folder and files in s3.
         if len(self.listUploadFiles) == 0:
             print ("Nothing New to upload.")
+            self.uploadStatus = "Everything Uploaded"
         else: 
             print ("============================= FILES TO BE UPLOADED =========================")
             print (len(self.listUploadFiles))
@@ -103,6 +116,9 @@ class awsUpload ():
                 print("================= PLEASE RE-TRY THE FOLLOWING FILES ===============")
                 print ("Number of files not uploaded: ", len(self.listUploadFiles)-len(self.uploadedFiles))
                 print ("Files that were not uploaded",set(self.listUploadFiles)-set(self.uploadedFiles))
+                self.uploadStatus = "Partial. Check Logs"
+            else:
+                self.uploadStatus = "Success"
 
     """def jSondata (self, uploadedFiles):
          1. Store data in jSON
@@ -129,25 +145,28 @@ class awsUpload ():
                 host = "uspl-db01.cdqeogcqmqye.us-east-1.rds.amazonaws.com",
                 user = "uspl_backup",
                 passwd = "*d!X5b*@z8",
-                database = "backup_status",
+                database = "backup_status"
             )
             mycursor = myDB.cursor()
         except Exception as sql1:
             print ("Can't connect to the database"+sql1)
+            quit()
 
         try:
-            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info (ID VARCHAR AUTO-INCREMENT PRIMARY KEY, DATE DATE, MACHINE VARCHAR, nooffiles INT, FILES VARCHAR, RESULT VARCHAR )"
+            sqlCreate = "CREATE TABLE IF NOT EXISTS backup_info (ID INT AUTO-INCREMENT PRIMARY KEY, DATE DATE, MACHINE VARCHAR(2555), nooffiles INT, FILES VARCHAR(2555), RESULT VARCHAR(2555))"
             mycursor.execute (sqlCreate)
         except Exception as sql2:
             print ("cant create a database"+sql2)
+            quit()
 
         try:
-            sqlInsert = "Insert into backup_info(, DATE, MACHINE, noofflies, files, result) VALUES (%s, %s, %s, %s, %s)"
-            insertVals = (dates, self.htmlFileName, )
+            sqlInsert = "Insert into backup_info(DATE, MACHINE, noofflies, files, result) VALUES (%s, %s, %s, %s, %s)"
+            insertVals = (str(dates), self.htmlFileName, len(self.uploadedFiles), self.uploadedFiles, self.uploadStatus)
             mycursor.execute(sqlInsert, insertVals)
             myDB.commit()
         except Exception as sql3:
             print ("Cannot Insert into Database"+sql3)
+            quit()
         finally:
             mycursor.close()
             myDB.close()
