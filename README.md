@@ -1,20 +1,19 @@
 # AWS-S3-Project
+
+AWS_Main_Script.py
+
+The script accepts 4 arguments: LocalFolderName, s3Bucket Name, s3 Folder name & FileName.
+
 Script to upload files to AWS S3.
 This program does the following things: 
 
-1. Reads from the local directory ()
+1. Reads from the local directory (readLocalFolder)
+2. Reads from the S3 Bucket (s3List)
+3. Uploads to S3 by comparing local & s3 files. (s3Upload)
+4. Gives upload status (success, failure, partial, nothing new) (uploadFileStatuses)
+5. Serializes the data in jSon Format (jSondata)
+6. Connects to SQL & inserts data in the SQL Tabel (mySqlConnection)
 
-1. Upload Script (Class)
-    1.1 Read from Local Folder (Method)
-    1.2 Get files from specific bucket in S3 (Method)
-    1.3 Compare & upload the files to S3 (Method)
-    1.4 Get status for uplodEd Files
-    1.5 Create a temp HTML File
+Pending : 
 
-
-    Pending: 
-    1. Dump status messages in jSon Format
-    2. Store that jSon data in SQL.
-    3. Fetch data from SQL to an HTMl file
-        3.1 File generated on the go
-        3.2 A new HTMl file emded with python to fetch data.
+    Create a HTML file to display data from SQL.
