@@ -1,6 +1,9 @@
 # AWS-S3-Project
-Script to upload files to AWS S3 using classes
-    2 classes and 4 methods.
+Script to upload files to AWS S3.
+This program does the following things: 
+
+1. Reads from the local directory ()
+
 1. Upload Script (Class)
     1.1 Read from Local Folder (Method)
     1.2 Get files from specific bucket in S3 (Method)
