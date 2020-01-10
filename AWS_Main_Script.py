@@ -139,11 +139,11 @@ class awsUpload ():
         dates = date.today()
         try:
             myDB = mysql.connector.connect(
-                host = "uspl-db01.cdqeogcqmqye.us-east-1.rds.amazonaws.com",
-                port = "3377",
-                user = "uspl_backup",
-                passwd = "*d!X5b*@z8",
-                database = "backup_status"
+                host = <hostname here>
+                port = <port here>,
+                user = <username>,
+                passwd = <password>,
+                database = <db name>
             )
             mycursor = myDB.cursor()
         except Exception as sql1:
